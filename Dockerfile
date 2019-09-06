@@ -1,5 +1,12 @@
 FROM debian:10-slim
 
+RUN apt-get update \
+ && apt-get install -y apt-transport-https \
+ && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TIMEZONE=Asia/Shanghai
+
+COPY sources.list /etc/apt/sources.list
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
 RUN set -eux; \
