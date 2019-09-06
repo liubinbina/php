@@ -1,7 +1,7 @@
 FROM debian:10-slim
 
 RUN apt-get update \
- && apt-get install -y apt-transport-https \
+ && apt-get install -y apt-transport-https ca-certificates \
  && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TIMEZONE=Asia/Shanghai
@@ -66,7 +66,7 @@ ENV PHP_LDFLAGS="-Wl,-O1 -Wl,--hash-style=both -pie"
 ENV GPG_KEYS 1729F83938DA44E27BA0F4D3DBDB397470D12172 B1B44D8F021E4E2D6021E995DC9FF8D3EE5AF27F
 
 ENV PHP_VERSION 7.2.22
-ENV PHP_URL="https://www.php.net/get/php-7.2.22.tar.xz/from/this/mirror" PHP_ASC_URL="https://www.php.net/get/php-7.2.22.tar.xz.asc/from/this/mirror"
+ENV PHP_URL="https://www.php.net/get/php-7.2.22.tar.xz/from/this/mirror" PHP_ASC_URL=""
 ENV PHP_SHA256="eb597fcf8dc0a6211a42a6346de4f63ee166829a6df6d8ed767fe14be8d1c3a3" PHP_MD5=""
 
 RUN set -eux; \
@@ -215,6 +215,9 @@ RUN set -eux; \
 		# for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf"
 		sed 's!=NONE/!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null; \
 		cp php-fpm.d/www.conf.default php-fpm.d/www.conf; \
+        sed -i 's!;\(listen\.owner.*\)!\1!g' php-fpm.d/www.conf; \
+        sed -i 's!;\(listen\.group.*\)!\1!g' php-fpm.d/www.conf; \
+        sed -i 's!;\(listen\.mode.*\)!\1!g' php-fpm.d/www.conf; \
 	else \
 		# PHP 5.x doesn't use "include=" by default, so we'll create our own simple config that mimics PHP 7+ for consistency
 		mkdir php-fpm.d; \
@@ -245,12 +248,12 @@ RUN set -eux; \
 		echo 'listen = /var/run/php-fpm.sock'; \
 	} | tee php-fpm.d/zz-docker.conf
 
-RUN set -eux; \
-	apt-get install -y --no-install-recommends \
+RUN set -eux \
+  ; apt-get update \
+  ;	apt-get install -y --no-install-recommends \
         wget \
         nginx \
-	; \
-	rm -rf /var/lib/apt/lists/* \
+  ; rm -rf /var/lib/apt/lists/* \
   ; wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 \
   ; chmod +x /usr/local/bin/dumb-init
 
