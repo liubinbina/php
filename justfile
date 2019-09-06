@@ -1,2 +1,2 @@
 build:
-    docker build . -t phpfb:7.2 #--progress=plain
+    docker build . -t phpfb:7.2 --progress=plain
