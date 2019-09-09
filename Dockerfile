@@ -235,16 +235,17 @@ RUN pecl install redis-4.0.1 \
     && docker-php-ext-enable redis xdebug
 
 RUN set -eux \
-  ; ls /usr/local/lib/php/extensions/no-debug-non-zts-20170718 \
+  #; ls /usr/local/lib/php/extensions/no-debug-non-zts-20170718 \
   ; docker-php-ext-install mysqli && docker-php-ext-enable mysqli \
   ; docker-php-ext-install mysql && docker-php-ext-enable mysql \
   ; docker-php-ext-install pdo && docker-php-ext-enable pdo \
   ; docker-php-ext-install pdo_mysql && docker-php-ext-enable pdo_mysql \
   #; docker-php-ext-install curl && docker-php-ext-enable curl \
   #; docker-php-ext-install bz2 && docker-php-ext-enable bz2 \
+  ; docker-php-ext-install bcmath && docker-php-ext-enable bcmath \
   ; docker-php-ext-install mbstring && docker-php-ext-enable mbstring
 
-
+COPY docker-nginx-default /etc/nginx/sites-available/default
 RUN set -eux; \
 	cd /usr/local/etc; \
 	if [ -d php-fpm.d ]; then \
@@ -283,7 +284,16 @@ RUN set -eux; \
 		echo '[www]'; \
 		echo 'listen = /var/run/php-fpm.sock'; \
 	} | tee php-fpm.d/zz-docker.conf \
-	; mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+	; mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" ; \
+	{ \
+      echo 'xdebug.remote_log="/tmp/xdebug.log"' ; \
+	  echo 'xdebug.remote_enable=on' ; \
+	  echo 'xdebug.remote_autostart=off' ; \
+	  echo 'xdebug.remote_handler=dbgp' ; \
+	  echo 'xdebug.remote_port=9001' ; \
+	  echo 'xdebug.remote_connect_back=0' ; \
+	  echo 'xdebug.idekey=editor-xdebug' ; \
+	} >> $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini
 
 
 
@@ -294,6 +304,6 @@ WORKDIR /var/www/html
 VOLUME [ "/var/www/html" ]
 EXPOSE 80
 COPY entrypoint.sh /usr/local/bin/
-COPY docker-nginx-default /etc/nginx/sites-available/default
+
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["/usr/local/bin/entrypoint.sh"]
