@@ -5,7 +5,9 @@ RUN apt-get update \
  && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TIMEZONE=Asia/Shanghai
-
+RUN set -eux \
+  ; ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
+  ; echo "$TIMEZONE" > /etc/timezone
 COPY sources.list /etc/apt/sources.list
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
@@ -218,6 +220,31 @@ RUN set -eux \
   ; wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 \
   ; chmod +x /usr/local/bin/dumb-init
 
+
+RUN apt-get update && apt-get install -y \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+    && docker-php-ext-install -j$(nproc) iconv \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install -j$(nproc) gd \
+	&& rm -rf /var/lib/apt/lists/*
+
+RUN pecl install redis-4.0.1 \
+    && pecl install xdebug-2.6.0 \
+    && docker-php-ext-enable redis xdebug
+
+RUN set -eux \
+  ; ls /usr/local/lib/php/extensions/no-debug-non-zts-20170718 \
+  ; docker-php-ext-install mysqli && docker-php-ext-enable mysqli \
+  ; docker-php-ext-install mysql && docker-php-ext-enable mysql \
+  ; docker-php-ext-install pdo && docker-php-ext-enable pdo \
+  ; docker-php-ext-install pdo_mysql && docker-php-ext-enable pdo_mysql \
+  #; docker-php-ext-install curl && docker-php-ext-enable curl \
+  #; docker-php-ext-install bz2 && docker-php-ext-enable bz2 \
+  ; docker-php-ext-install mbstring && docker-php-ext-enable mbstring
+
+
 RUN set -eux; \
 	cd /usr/local/etc; \
 	if [ -d php-fpm.d ]; then \
@@ -256,12 +283,8 @@ RUN set -eux; \
 		echo '[www]'; \
 		echo 'listen = /var/run/php-fpm.sock'; \
 	} | tee php-fpm.d/zz-docker.conf \
-    ; \
-    for ext in bz2 curl fileinfo gd2 pdo_mysql; do\
-        echo "enable php extension $ext" ;\
-        sed -i 's!^;\(extension='"$ext"'.*\)!\1!g' php/php.ini-development ;\
-        sed -i 's!^;\(extension='"$ext"'.*\)!\1!g' php/php.ini-production ;\
-    done
+	; mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 
 
 #ENTRYPOINT ["docker-php-entrypoint"]
