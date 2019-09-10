@@ -5,6 +5,8 @@ info:
     docker run --rm \
         --name=test \
         -p 8088:80 \
+        -p 9002:9002 \
+        -e XDEBUG_CONFIG='remote_port=9002' \
         -v vscode-server-php:/root/.vscode-server \
         -v $(pwd)/index.php:/srv/index.php \
         phpf:7.2
