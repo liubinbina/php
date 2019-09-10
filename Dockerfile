@@ -287,8 +287,6 @@ RUN set -eux; \
       echo 'xdebug.remote_log="/tmp/xdebug.log"' ; \
 	  echo 'xdebug.remote_enable=on' ; \
 	  echo 'xdebug.remote_autostart=on' ; \
-	  echo 'xdebug.idekey=XDEBUG_ECLIPSE' ; \
-	  echo 'xdebug.remote_handler=dbgp' ; \
 	} >> $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini
 
 
