@@ -290,9 +290,10 @@ RUN set -eux; \
 	  echo 'xdebug.remote_enable=on' ; \
 	  echo 'xdebug.remote_autostart=off' ; \
 	  echo 'xdebug.remote_handler=dbgp' ; \
-	  echo 'xdebug.remote_port=9001' ; \
+	  echo 'xdebug.remote_port=9000' ; \
 	  echo 'xdebug.remote_connect_back=0' ; \
 	  echo 'xdebug.idekey=editor-xdebug' ; \
+	  echo 'xdebug.remote_host="127.0.0.1"' ; \
 	} >> $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini
 
 
