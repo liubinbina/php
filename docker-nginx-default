@@ -1,6 +1,6 @@
 server {
     listen   80 default_server; ## listen for ipv4; this line is default and implied
-    set $root '/var/www/html';
+    set $root '/srv';
 
     charset utf8;
     location ~ .*\.(gif|jpg|jpeg|bmp|png|ico|txt|js|css)$
