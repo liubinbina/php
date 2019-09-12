@@ -240,8 +240,11 @@ RUN set -eux \
   ; docker-php-ext-install pdo_mysql && docker-php-ext-enable pdo_mysql \
   #; docker-php-ext-install curl && docker-php-ext-enable curl \
   #; docker-php-ext-install bz2 && docker-php-ext-enable bz2 \
-  ; docker-php-ext-install bcmath && docker-php-ext-enable bcmath \
   ; docker-php-ext-install mbstring && docker-php-ext-enable mbstring
+
+RUN set -eux \
+  ; docker-php-ext-install bcmath && docker-php-ext-enable bcmath \
+  ; docker-php-ext-install zip && docker-php-ext-enable zip
 
 COPY docker-nginx-default /etc/nginx/sites-available/default
 RUN set -eux; \
