@@ -1,4 +1,4 @@
 #!/usr/bin/with-contenv sh
 echo >&2 "starting php-fpm"
-[[ -f ./setup ]] && source ./setup
+
 exec /usr/local/sbin/php-fpm 2>&1
