@@ -8,7 +8,6 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TIMEZONE=Asia/Shanghai
 RUN set -eux \
   ; ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
   ; echo "$TIMEZONE" > /etc/timezone
-COPY sources.list /etc/apt/sources.list
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
 RUN set -eux; \
@@ -33,6 +32,7 @@ ENV PHPIZE_DEPS \
 
 # persistent / runtime deps
 RUN set -eux; \
+	sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp2.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
 		$PHPIZE_DEPS \
