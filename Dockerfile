@@ -252,6 +252,7 @@ RUN set -eux \
 
 COPY docker-nginx-default /etc/nginx/sites-available/default
 RUN set -eux; \
+	sed -i '1i\daemon off;' /etc/nginx/nginx.conf; \
 	cd /usr/local/etc; \
 	if [ -d php-fpm.d ]; then \
 		# for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf"
