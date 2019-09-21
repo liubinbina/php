@@ -1,5 +1,7 @@
 build:
-    docker build . -t phpf:7.2 --progress=plain
+    docker build . -t nnurphy/phpf:7.2 --progress=plain \
+        --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
+        --build-arg php_url=http://172.178.1.204:2015/php-7.2.22.tar.xz
 
 info:
     docker run --rm \
