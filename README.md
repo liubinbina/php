@@ -1,25 +1,35 @@
-端口必须绑定,并且一致(不要问为什么))
-``` bash
--p 9001:9001
+- 服务端口: 80
+- 调试端口: 22
+- 应用目录: /srv
+
+构建镜像时拷贝公钥
+```bash
+COPY id_ecdsa.php.pub /root/.ssh/authorized_keys
 ```
 
-如果不是默认值,使用环境变量设置
-``` bash
--e XDEBUG_CONFIG='remote_port=9002'
+本地 `~/.ssh/config` 添加
+```bash
+Host dev:xxx
+    HostName localhost
+    User root
+    IdentitiesOnly yes
+    IdentityFile ~/.ssh/id_ecdsa.php
+    Port 8022
 ```
 
+运行容器
 ``` bash
-docker run --rm \
-    --name=test \
-    -p 8088:80 \
-    -p 9002:9002 \
-    -e XDEBUG_CONFIG='remote_port=9002' \
-    -v vscode-server-php:/root/.vscode-server \
-    -v $(pwd)/index.php:/srv/index.php \
-    phpf:7.2
+    docker run \
+        --rm \
+        --name test \
+        -v vscode-server-php:/root/.vscode-server \
+        -v $(pwd)/log:/var/log/nginx \
+        -p 8022:22 \
+        -p 8082:80 \
+        phpf:7.2
 ```
 
-使用 vscode 远程模式进入容器, 打开 `/srv` 目录
+使用 vscode remote \[ssh\] 模式登录即可, 打开 `/srv` 目录
 
 添加调试配置
 ``` json
@@ -27,7 +37,7 @@ docker run --rm \
     "name": "Listen for XDebug",
     "type": "php",
     "request": "launch",
-    "port": 9002
+    "port": 9001
 }
 ```
-注意端口应与之前设置保持一致
+
