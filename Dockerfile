@@ -212,12 +212,11 @@ RUN { echo '#!/bin/sh'; echo 'exec pkg-config "$@" freetype2'; } > /usr/local/bi
 RUN set -eux \
   ; apt-get update \
   ;	apt-get install -y --no-install-recommends \
+		openssh-server \
+		s6 \
         wget \
         nginx \
-  ; rm -rf /var/lib/apt/lists/* \
-  ; wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 \
-  ; chmod +x /usr/local/bin/dumb-init
-
+  ; rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
         libfreetype6-dev \
@@ -301,7 +300,5 @@ WORKDIR /srv
 
 VOLUME [ "/srv", "/root/.vscode-server" ]
 EXPOSE 80
-COPY entrypoint.sh /usr/local/bin/
 
-ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/s6-svscan", "/etc/s6"]
