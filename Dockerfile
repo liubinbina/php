@@ -216,6 +216,7 @@ RUN set -eux \
 		s6 \
         wget \
         nginx \
+  ; mkdir -p /var/run/sshd \
   ; rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
