@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv sh
+echo >&2 "starting php-fpm"
+[[ -f ./setup ]] && source ./setup
+exec /usr/sbin/nginx -g "daemon off;"
