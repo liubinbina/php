@@ -290,7 +290,9 @@ RUN set -eux; \
 		echo '[www]'; \
 		echo 'listen = /var/run/php-fpm.sock'; \
 	} | tee php-fpm.d/zz-docker.conf \
-	; mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" ; \
+	; mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+	; sed -i 's!^.*\(date.timezone =\).*$!\1 Asia/Shanghai!' "$PHP_INI_DIR/php.ini" \
+	; \
 	{ \
       echo 'xdebug.remote_log="/tmp/xdebug.log"' ; \
 	  echo 'xdebug.remote_enable=on' ; \
