@@ -7,8 +7,7 @@ info:
     docker run --rm \
         --name=test \
         -p 8088:80 \
-        -p 9002:9002 \
-        -e XDEBUG_CONFIG='remote_port=9002' \
+        -p 9002:22 \
         -v vscode-server-php:/root/.vscode-server \
         -v $(pwd)/index.php:/srv/index.php \
         phpf:7.2
@@ -26,6 +25,3 @@ debug:
         --network=container:test \
         --pid=container:test \
         deb
-
-start:
-    curl -b "XDEBUG_SESSION=sublime.xdebug" http://localhost:8088/
