@@ -1,4 +1,8 @@
 #!/usr/bin/with-contenv sh
+if [ ! -n $WEB_ROOT ]; then
+    sed -i 's!\(set $root\).*$!\1 '"\'$WEB_ROOT\'"';!' /etc/nginx/sites-available/default
+fi
+
 echo >&2 "starting nginx"
 
 exec /usr/sbin/nginx 2>&1
