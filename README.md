@@ -41,3 +41,11 @@ Host dev:xxx
 }
 ```
 
+使用 wstunnel 连接
+```sh
+docker run --rm \
+    --name=wsc \
+    -e SRV=ws://172.178.5.21:8090 \
+    -p 8899:8080 \
+    wstunnel 0.0.0.0:8080:127.0.0.1:80 --upgradePathPrefix=wstunnel-ldljWkuBLwUMn
+```
