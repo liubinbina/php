@@ -1,7 +1,7 @@
 FROM debian:10-slim
 
 ARG s6url=https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz
-ARG php_url=https://www.php.net/get/php-7.2.22.tar.xz/from/this/mirror
+ARG php_url=https://www.php.net/get/php-7.2.24.tar.xz/from/this/mirror
 
 RUN sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp2.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
  && apt-get update \
