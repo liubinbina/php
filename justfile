@@ -18,7 +18,7 @@ test:
         --name=test \
         -p 8090:80 \
         -v vscode-server-php:/root/.vscode-server \
-        -v $(pwd)/../mantis-php/mantis:/srv \
+        -v $(pwd)/id_ecdsa.php.pub:/root/.ssh/authorized_keys \
         nnurphy/phpf:7.2
 
 # wstunnel -L 2223:127.0.0.1:80 ws://127.0.0.1:80 --upgradePathPrefix=wstunnel-S6cHCQuPtVubM
@@ -34,7 +34,7 @@ k8sc token:
     docker run --rm \
         --name=wsc \
         -p 2233:8080 \
-        wstunnel -L 0.0.0.0:8080:127.0.0.1:22 ws://xyz.xinminghui.com --upgradePathPrefix=wstunnel-{{token}}
+        wstunnel -L 0.0.0.0:8080:127.0.0.1:22 ws://172.178.5.21:8090 --upgradePathPrefix=wstunnel-{{token}}
 
 debug:
     docker run --rm -it \
