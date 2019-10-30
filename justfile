@@ -30,6 +30,12 @@ wsc:
         -p 8899:8080 \
         wstunnel 0.0.0.0:8080:127.0.0.1:80 --upgradePathPrefix=wstunnel-ldljWkuBLwUMn
 
+k8sc token:
+    docker run --rm \
+        --name=wsc \
+        -p 2233:8080 \
+        wstunnel -L 0.0.0.0:8080:127.0.0.1:22 ws://xyz.xinminghui.com --upgradePathPrefix=wstunnel-{{token}}
+
 debug:
     docker run --rm -it \
         --network=container:test \
