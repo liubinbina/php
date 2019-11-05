@@ -4,6 +4,18 @@ build:
         --build-arg php_url=http://172.178.1.204:2015/php-7.2.24.tar.xz \
         --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
 
+build-55:
+    docker build . -t nnurphy/phpf:5.5 -f Dockerfile-5.5 \
+        --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
+        --build-arg php_url=https://www.php.net/distributions/php-5.5.38.tar.xz \
+        --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
+
+build-56:
+    docker build . -t nnurphy/phpf:5.6 -f Dockerfile-5.6 \
+        --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
+        --build-arg php_url=https://www.php.net/distributions/php-5.6.40.tar.xz \
+        --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
+
 info:
     docker run --rm \
         --name=test \
