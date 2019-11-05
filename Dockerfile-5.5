@@ -1,18 +1,155 @@
+FROM debian:10-slim
 
-#(nop) CMD ["php-fpm"]
-#(nop) EXPOSE 9000/tcp
-set -ex  && cd /usr/local/etc  && if [ -d php-fpm.d ]; then   sed 's!=NONE/!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null;   cp php-fpm.d/www.conf.default php-fpm.d/www.conf;  else   mkdir php-fpm.d;   cp php-fpm.conf.default php-fpm.d/www.conf;   {    echo '[global]';    echo 'include=etc/php-fpm.d/*.conf';   } | tee php-fpm.conf;  fi  && {   echo '[global]';   echo 'error_log = /proc/self/fd/2';   echo;   echo '[www]';   echo '; if we send this to /proc/self/fd/1, it never appears';   echo 'access.log = /proc/self/fd/2';   echo;   echo 'clear_env = no';   echo;   echo '; Ensure worker stdout and stderr are sent to the main error log.';   echo 'catch_workers_output = yes';  } | tee php-fpm.d/docker.conf  && {   echo '[global]';   echo 'daemonize = no';   echo;   echo '[www]';   echo 'listen = [::]:9000';  } | tee php-fpm.d/zz-docker.conf
-#(nop) WORKDIR /var/www/html
-#(nop) COPY multi:ed54b4fe7bef284934703fa6e979b7cc0daed0549a07586d0c1ccd4e2b41884a in /usr/local/bin/
-set -xe  && buildDeps="   $PHP_EXTRA_BUILD_DEPS   libcurl4-openssl-dev   libedit-dev   libsqlite3-dev   libssl-dev   libxml2-dev  "  && apt-get update && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/*   && docker-php-source extract  && cd /usr/src/php  && ./configure   --with-config-file-path="$PHP_INI_DIR"   --with-config-file-scan-dir="$PHP_INI_DIR/conf.d"     --disable-cgi     --enable-ftp   --enable-mbstring   --enable-mysqlnd     --with-curl   --with-libedit   --with-openssl   --with-zlib     $PHP_EXTRA_CONFIGURE_ARGS  && make -j"$(nproc)"  && make install  && { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; }  && make clean  && docker-php-source delete   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $buildDeps
-#(nop) COPY file:207c686e3fed4f71f8a7b245d8dcae9c9048d276a326d82b553c12a90af0c0ca in /usr/local/bin/
-set -xe  && cd /usr/src  && curl -fSL "http://php.net/get/$PHP_FILENAME/from/this/mirror" -o php.tar.xz  && echo "$PHP_SHA256 *php.tar.xz" | sha256sum -c -  && curl -fSL "http://php.net/get/$PHP_FILENAME.asc/from/this/mirror" -o php.tar.xz.asc  && export GNUPGHOME="$(mktemp -d)"  && for key in $GPG_KEYS; do   gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key";  done  && gpg --batch --verify php.tar.xz.asc php.tar.xz  && rm -r "$GNUPGHOME"
-#(nop) ENV PHP_SHA256=cb527c44b48343c8557fe2446464ff1d4695155a95601083e5d1f175df95580f
-#(nop) ENV PHP_FILENAME=php-5.5.38.tar.xz
-#(nop) ENV PHP_VERSION=5.5.38
-#(nop) ENV GPG_KEYS=0B96609E270F565C13292B24C13C70B87267B52D 0BD78B5F97500D450838F95DFE857D9A90D90EC1 F38252826ACD957EF380D39F2F7956BC5DA04B5D
-#(nop) ENV PHP_EXTRA_CONFIGURE_ARGS=--enable-fpm --with-fpm-user=www-data --with-fpm-group=www-data
-mkdir -p $PHP_INI_DIR/conf.d
-#(nop) ENV PHP_INI_DIR=/usr/local/etc/php
-apt-get update && apt-get install -y   $PHPIZE_DEPS   ca-certificates   curl   libedit2   libsqlite3-0   libxml2   xz-utils  --no-install-recommends && rm -r /var/lib/apt/lists/*
-#(nop) ENV PHPIZE_DEPS=autoconf   file   g++   gcc   libc-dev   make   pkg-config   re2c
+ARG s6url=https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz
+ARG php_url=https://www.php.net/get/php-7.2.24.tar.xz/from/this/mirror
+
+# prevent Debian's PHP packages from being installed
+# https://github.com/docker-library/php/pull/542
+RUN set -eux; \
+	{ \
+		echo 'Package: php*'; \
+		echo 'Pin: release *'; \
+		echo 'Pin-Priority: -1'; \
+	} > /etc/apt/preferences.d/no-debian-php
+
+ENV PHPIZE_DEPS \
+        autoconf \
+        dpkg-dev \
+        file \
+        g++ \
+        gcc \
+        libc-dev \
+        make \
+        pkg-config \
+        re2c \
+        vim
+
+RUN set -eux \
+  ;sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp2.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
+  ; apt-get update \
+  ; apt-get install -y --no-install-recommends \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        libedit2 \
+        libsqlite3-0 \
+        libxml2 \
+        xz-utils\
+        $PHPIZE_DEPS \
+  ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TIMEZONE=Asia/Shanghai
+RUN set -eux \
+  ; ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
+  ; echo "$TIMEZONE" > /etc/timezone
+
+ENV PHP_INI_DIR=/usr/local/etc/php
+RUN set -eux; \
+	mkdir -p "$PHP_INI_DIR/conf.d"; \
+# allow running as an arbitrary user (https://github.com/docker-library/php/issues/743)
+	chown www-data:www-data /srv; \
+	chmod 777 /srv
+
+ENV PHP_EXTRA_CONFIGURE_ARGS \
+        --enable-fpm \
+        --with-fpm-user=www-data \
+        --with-fpm-group=www-data
+
+ENV GPG_KEYS 0B96609E270F565C13292B24C13C70B87267B52D 0BD78B5F97500D450838F95DFE857D9A90D90EC1 F38252826ACD957EF380D39F2F7956BC5DA04B5D
+
+ENV PHP_VERSION=5.5.38
+ENV PHP_FILENAME=php-5.5.38.tar.xz
+ENV PHP_SHA256=cb527c44b48343c8557fe2446464ff1d4695155a95601083e5d1f175df95580f
+
+RUN set -xue  \
+  ; cd /usr/src \
+  ; curl -fSL "http://php.net/get/$PHP_FILENAME/from/this/mirror" -o php.tar.xz  \
+  ; echo "$PHP_SHA256 *php.tar.xz" | sha256sum -c -  \
+  ; curl -fSL "http://php.net/get/$PHP_FILENAME.asc/from/this/mirror" -o php.tar.xz.asc  \
+  ; export GNUPGHOME="$(mktemp -d)"  \
+  ; for key in $GPG_KEYS; do \
+        gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+    done \
+  ; gpg --batch --verify php.tar.xz.asc php.tar.xz  \
+  ; rm -r "$GNUPGHOME"
+
+COPY docker-php-source /usr/local/bin/
+
+RUN set -eux \
+  ; buildDeps="\
+        $PHP_EXTRA_BUILD_DEPS \
+        libcurl4-openssl-dev \
+        libedit-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        libxml2-dev"  \
+  ; apt-get update \
+  ; apt-get install -y $buildDeps --no-install-recommends \
+  ; rm -rf /var/lib/apt/lists/*   \
+  ; docker-php-source extract  \
+  ; cd /usr/src/php  \
+  ; ./configure \
+        --with-config-file-path="$PHP_INI_DIR" \
+        --with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
+        --disable-cgi  \
+        --enable-ftp \
+        --enable-mbstring \
+        --enable-mysqlnd \
+        --with-curl \
+        --with-libedit \
+        --with-openssl \
+        --with-zlib  \
+        $PHP_EXTRA_CONFIGURE_ARGS \
+  ; make -j"$(nproc)"  \
+  ; make install  \
+  ; { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; }  \
+  ; make clean  \
+  ; docker-php-source delete \
+  ; apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $buildDeps
+
+COPY docker-php-ext-* docker-php-entrypoint /usr/local/bin/
+
+
+RUN set -ex  \
+  ; cd /usr/local/etc \
+  ; if [ -d php-fpm.d ]; then \
+        sed 's!=NONE/!=!g' php-fpm.conf.default \
+            | tee php-fpm.conf > /dev/null; \
+        cp php-fpm.d/www.conf.default php-fpm.d/www.conf; \
+    else \
+        mkdir php-fpm.d; \
+        cp php-fpm.conf.default php-fpm.d/www.conf; \
+        {    echo '[global]';    echo 'include=etc/php-fpm.d/*.conf';   } \
+            | tee php-fpm.conf; \
+    fi \
+  ; { \
+        echo '[global]'; \
+        echo 'error_log = /proc/self/fd/2'; \
+        echo; \
+        echo '[www]'; \
+        echo '; if we send this to /proc/self/fd/1, it never appears'; \
+        echo 'access.log = /proc/self/fd/2'; \
+        echo; \
+        echo 'clear_env = no'; \
+        echo; \
+        echo '; Ensure worker stdout and stderr are sent to the main error log.'; \
+        echo 'catch_workers_output = yes'; \
+    } | tee php-fpm.d/docker.conf  \
+  ; { \
+        echo '[global]'; \
+        echo 'daemonize = no'; \
+        echo; \
+        echo '[www]'; \
+        echo 'listen = [::]:9000'; \
+    } | tee php-fpm.d/zz-docker.conf
+
+WORKDIR /srv
+
+VOLUME [ "/srv", "/root/.vscode-server" ]
+EXPOSE 80
+
+ENTRYPOINT [ "/init" ]
+
+
+
+

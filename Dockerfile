@@ -3,15 +3,6 @@ FROM debian:10-slim
 ARG s6url=https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz
 ARG php_url=https://www.php.net/get/php-7.2.24.tar.xz/from/this/mirror
 
-RUN sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp2.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
- && apt-get update \
- && apt-get install -y apt-transport-https ca-certificates \
- && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
-
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TIMEZONE=Asia/Shanghai
-RUN set -eux \
-  ; ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
-  ; echo "$TIMEZONE" > /etc/timezone
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
 RUN set -eux; \
@@ -36,15 +27,21 @@ ENV PHPIZE_DEPS \
 		vim
 
 # persistent / runtime deps
-RUN set -eux; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-		$PHPIZE_DEPS \
+RUN set -eux \
+  ; sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp2.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
+  ; apt-get update \
+  ; apt-get install -y --no-install-recommends \
+ 		apt-transport-https \
 		ca-certificates \
 		curl \
 		xz-utils \
-	; \
-	rm -rf /var/lib/apt/lists/*
+		$PHPIZE_DEPS \
+  ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TIMEZONE=Asia/Shanghai
+RUN set -eux \
+  ; ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
+  ; echo "$TIMEZONE" > /etc/timezone
 
 ENV PHP_INI_DIR /usr/local/etc/php
 RUN set -eux; \
