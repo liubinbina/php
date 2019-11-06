@@ -1,11 +1,11 @@
 #!/usr/bin/with-contenv sh
 if [ ! -z $WEB_ROOT ]; then
-    sed -i 's!\(set $root\).*$!\1 '"\'$WEB_ROOT\'"';!' /etc/nginx/sites-available/default
+    sed -i 's!\(set $root\).*$!\1 '"\'$WEB_ROOT\'"';!' /etc/nginx/conf.d/default.conf
 fi
 
 export wstunnel_token=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
 echo "wstunnel url is \`/wstunnel-${wstunnel_token}\`"
-sed -i 's!wstunnel!'"wstunnel-$wstunnel_token"'!' /etc/nginx/sites-available/default
+sed -i 's!wstunnel!'"wstunnel-$wstunnel_token"'!' /etc/nginx/conf.d/default.conf
 
 echo >&2 "starting nginx"
 
