@@ -6,7 +6,8 @@ ENV DEV_DEPS \
         openssh-server \
         curl \
         nginx \
-        vim
+        vim \
+        gpg gpg-agent
 
 RUN set -eux \
   ; sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
@@ -47,8 +48,6 @@ ENV PHP_PGKS \
         php${PHP_VERSION}-bcmath
 
 RUN set -eux \
-  ; apt-get update \
-  ; apt-get install -y --no-install-recommends gpg gpg-agent \
   ; curl -sL https://packages.sury.org/php/apt.gpg | apt-key add - \
   ; echo "deb https://packages.sury.org/php/ buster main"  \
         | tee /etc/apt/sources.list.d/php.list \
