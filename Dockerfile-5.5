@@ -1,7 +1,10 @@
 FROM debian:10-slim
 
 ARG s6url=https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz
-ARG php_url=https://www.php.net/get/php-7.2.24.tar.xz/from/this/mirror
+ENV PHP_VERSION=5.5.38
+ENV PHP_FILENAME=php-5.5.38.tar.xz
+ENV PHP_SHA256=cb527c44b48343c8557fe2446464ff1d4695155a95601083e5d1f175df95580f
+ARG php_url=https://www.php.net/distributions/php-5.5.38.tar.xz
 
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
@@ -28,7 +31,7 @@ ENV PHPIZE_DEPS \
         vim
 
 RUN set -eux \
-  ;sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp2.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
+  ;sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
   ; apt-get update \
   ; apt-get install -y --no-install-recommends \
         apt-transport-https \
@@ -61,15 +64,21 @@ ENV PHP_EXTRA_CONFIGURE_ARGS \
         --with-fpm-user=www-data \
         --with-fpm-group=www-data
 
-ENV GPG_KEYS 0B96609E270F565C13292B24C13C70B87267B52D 0BD78B5F97500D450838F95DFE857D9A90D90EC1 F38252826ACD957EF380D39F2F7956BC5DA04B5D
-
-ENV PHP_VERSION=5.5.38
-ENV PHP_FILENAME=php-5.5.38.tar.xz
-ENV PHP_SHA256=cb527c44b48343c8557fe2446464ff1d4695155a95601083e5d1f175df95580f
 
 RUN set -xue  \
+  ; if ! command -v gpg > /dev/null; then \
+        fetchDeps="\
+            dirmngr \
+            gnupg \
+            "; \
+    fi \
+  ; apt-get update \
+  ; apt-get install -y --no-install-recommends \
+        $fetchDeps \
+  ; rm -rf /var/lib/apt/lists/* \
+  ; mkdir -p /usr/src \
   ; cd /usr/src \
-  ; curl -fSL "http://php.net/get/$PHP_FILENAME/from/this/mirror" -o php.tar.xz  \
+  ; curl -fSL "${php_url}" -o php.tar.xz  \
   ; echo "$PHP_SHA256 *php.tar.xz" | sha256sum -c -  \
   ; curl -fSL "http://php.net/get/$PHP_FILENAME.asc/from/this/mirror" -o php.tar.xz.asc  \
   ; export GNUPGHOME="$(mktemp -d)"  \
@@ -82,36 +91,65 @@ RUN set -xue  \
 COPY docker-php-source /usr/local/bin/
 
 RUN set -eux \
-  ; buildDeps="\
-        $PHP_EXTRA_BUILD_DEPS \
+  ; savedAptMark="$(apt-mark showmanual)" \
+  ; apt-get update \
+  ; apt-get install -y --no-install-recommends \
         libcurl4-openssl-dev \
         libedit-dev \
         libsqlite3-dev \
         libssl-dev \
-        libxml2-dev"  \
-  ; apt-get update \
-  ; apt-get install -y $buildDeps --no-install-recommends \
-  ; rm -rf /var/lib/apt/lists/*   \
-  ; docker-php-source extract  \
-  ; cd /usr/src/php  \
+        libxml2-dev \
+        zlib1g-dev \
+        ${PHP_EXTRA_BUILD_DEPS:-} \
+  ; rm -rf /var/lib/apt/lists/* \
+  ; export \
+        CFLAGS="$PHP_CFLAGS" \
+        CPPFLAGS="$PHP_CPPFLAGS" \
+        LDFLAGS="$PHP_LDFLAGS" \
+  ; docker-php-source extract \
+  ; cd /usr/src/php \
+  ; gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+  ; debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)" \
+  ; if [ ! -d /usr/include/curl ]; then \
+        ln -sT "/usr/include/$debMultiarch/curl" /usr/local/include/curl; \
+    fi \
   ; ./configure \
+        --build="$gnuArch" \
         --with-config-file-path="$PHP_INI_DIR" \
         --with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
-        --disable-cgi  \
+        --enable-option-checking=fatal \
+        --with-mhash \
         --enable-ftp \
         --enable-mbstring \
         --enable-mysqlnd \
         --with-curl \
         --with-libedit \
         --with-openssl \
-        --with-zlib  \
-        $PHP_EXTRA_CONFIGURE_ARGS \
-  ; make -j"$(nproc)"  \
-  ; make install  \
-  ; { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; }  \
-  ; make clean  \
+        --with-zlib \
+        $(test "$gnuArch" = 's390x-linux-gnu' && echo '--without-pcre-jit') \
+        --with-libdir="lib/$debMultiarch" \
+        ${PHP_EXTRA_CONFIGURE_ARGS:-} \
+  ; make -j "$(nproc)" \
+  ; make install \
+  ; find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true \
+  ; make clean \
+  ; cp -v php.ini-* "$PHP_INI_DIR/" \
+  ; cd / \
   ; docker-php-source delete \
-  ; apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $buildDeps
+  ; apt-mark auto '.*' > /dev/null \
+  ; [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark \
+  ; find /usr/local -type f -executable -exec ldd '{}' ';'  \
+        | awk '/=>/ { print $(NF-1) }' \
+        | sort -u  \
+        | xargs -r dpkg-query --search  \
+        | cut -d: -f1  \
+        | sort -u  \
+        | xargs -r apt-mark manual  \
+  ; apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+  ; php --version \
+  ; pecl update-channels \
+  ; rm -rf /tmp/pear ~/.pearrc
+
 
 COPY docker-php-ext-* docker-php-entrypoint /usr/local/bin/
 

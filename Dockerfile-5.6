@@ -1,7 +1,11 @@
 FROM debian:10-slim
 
 ARG s6url=https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz
-ARG php_url=https://www.php.net/get/php-7.2.24.tar.xz/from/this/mirror
+ENV GPG_KEYS 1729F83938DA44E27BA0F4D3DBDB397470D12172 B1B44D8F021E4E2D6021E995DC9FF8D3EE5AF27F
+ENV PHP_VERSION=5.6.40
+ARG PHP_URL=https://www.php.net/distributions/php-5.6.40.tar.xz
+ENV PHP_SHA256=1369a51eee3995d7fbd1c5342e5cc917760e276d561595b6052b21ace2656d1c PHP_MD5=
+
 
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
@@ -28,7 +32,7 @@ ENV PHPIZE_DEPS \
         vim
 
 RUN set -eux \
-  ;sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp2.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
+  ;sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
   ; apt-get update \
   ; apt-get install -y --no-install-recommends \
         apt-transport-https \
@@ -79,25 +83,7 @@ ENV PHP_LDFLAGS \
         -Wl,--hash-style=both \
         -pie
 
-ENV GPG_KEYS 0BD78B5F97500D450838F95DFE857D9A90D90EC1 6E4F6AB321FDC07F2C332E3AC2BF0BC433CFC8B3
-ENV PHP_VERSION=5.6.40
-ENV PHP_URL=https://secure.php.net/get/php-5.6.40.tar.xz/from/this/mirror
-ENV PHP_ASC_URL=https://secure.php.net/get/php-5.6.40.tar.xz.asc/from/this/mirror
-ENV PHP_SHA256=1369a51eee3995d7fbd1c5342e5cc917760e276d561595b6052b21ace2656d1c PHP_MD5=
-
 RUN set -xe \
-  ; fetchDeps='\
-        wget ' \
-  ; if ! command -v gpg > /dev/null; then \
-        fetchDeps="$fetchDeps \
-            dirmngr \
-            gnupg \
-            "; \
-    fi \
-  ; apt-get update \
-  ; apt-get install -y --no-install-recommends \
-        $fetchDeps \
-  ; rm -rf /var/lib/apt/lists/* \
   ; mkdir -p /usr/src \
   ; cd /usr/src \
   ; wget -O php.tar.xz "$PHP_URL" \
@@ -106,18 +92,7 @@ RUN set -xe \
     fi \
   ; if [ -n "$PHP_MD5" ]; then \
         echo "$PHP_MD5 *php.tar.xz" | md5sum -c -; \
-    fi \
-  ; if [ -n "$PHP_ASC_URL" ]; then \
-        wget -O php.tar.xz.asc "$PHP_ASC_URL"; \
-        export GNUPGHOME="$(mktemp -d)"; \
-        for key in $GPG_KEYS; do \
-                gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-        done; \
-        gpg --batch --verify php.tar.xz.asc php.tar.xz; \
-        command -v gpgconf > /dev/null && gpgconf --kill all; \
-        rm -rf "$GNUPGHOME"; \
-    fi \
-  ; apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $fetchDeps
+    fi
 
 COPY docker-php-source /usr/local/bin/
 
@@ -128,7 +103,7 @@ RUN set -eux \
         libcurl4-openssl-dev \
         libedit-dev \
         libsqlite3-dev \
-        libssl1.0-dev \
+        libssl-dev \
         libxml2-dev \
         zlib1g-dev \
         ${PHP_EXTRA_BUILD_DEPS:-} \
