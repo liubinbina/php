@@ -1,0 +1,68 @@
+FROM debian:10-slim
+
+ARG s6url=https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz
+
+ENV DEV_DEPS \
+        openssh-server \
+        curl \
+        nginx \
+        vim
+
+RUN set -eux \
+  ; sed -i 's/\(.*\)\(security\|deb\).debian.org\(.*\)main/\1ftp.cn.debian.org\3main contrib non-free/g' /etc/apt/sources.list \
+  ; apt-get update \
+  ; apt-get install -y --no-install-recommends \
+ 		apt-transport-https \
+		ca-certificates \
+		xz-utils \
+		$DEV_DEPS \
+  ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* \
+  ; curl --fail --silent -L ${s6url} | \
+    tar xzvf - -C / \
+  ; mkdir -p /var/run/sshd
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TIMEZONE=Asia/Shanghai
+RUN set -eux \
+  ; ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
+  ; echo "$TIMEZONE" > /etc/timezone
+
+ENV wstunnel_version=2.0
+ARG wstunnel_url=https://github.com/erebe/wstunnel/releases/download/${wstunnel_version}/wstunnel_linux_x64
+RUN curl ${wstunnel_url} > /usr/local/bin/wstunnel \
+    ; chmod a+x /usr/local/bin/wstunnel
+
+ARG PHP_VERSION=5.6
+ENV PHP_PGKS \
+        php${PHP_VERSION} \
+        php${PHP_VERSION}-fpm \
+        php${PHP_VERSION}-cli \
+        php${PHP_VERSION}-common \
+        php${PHP_VERSION}-curl \
+        php${PHP_VERSION}-gd \
+        php${PHP_VERSION}-json \
+        php${PHP_VERSION}-mbstring \
+        php${PHP_VERSION}-mysql \
+        php${PHP_VERSION}-xml \
+        php${PHP_VERSION}-zip \
+        php${PHP_VERSION}-bcmath
+
+RUN set -eux \
+  ; apt-get update \
+  ; apt-get install -y --no-install-recommends gpg gpg-agent \
+  ; curl -sL https://packages.sury.org/php/apt.gpg | apt-key add - \
+  ; echo "deb https://packages.sury.org/php/ buster main"  \
+        | tee /etc/apt/sources.list.d/php.list \
+  ; apt-get update \
+  #; apt-get upgrade \
+  ; apt-get install -y --no-install-recommends $PHP_PGKS \
+  ; apt-get remove gpg gpg-agent \
+  ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+COPY services.d /etc/services.d
+WORKDIR /srv
+
+VOLUME [ "/srv", "/root/.vscode-server" ]
+EXPOSE 80
+
+ENTRYPOINT [ "/init" ]
+
