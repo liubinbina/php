@@ -1,5 +1,6 @@
 server {
     listen   80 default_server; ## listen for ipv4; this line is default and implied
+    ## server_name
     set $root '/srv';
 
     charset utf8;
