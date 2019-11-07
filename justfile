@@ -1,5 +1,5 @@
 build version="5.6":
-    docker build . -t nnurphy/phpf:{{version}} -f Dockerfile \
+    docker build . -t nnurphy/phpf:{{version}} \
         --build-arg PHP_VERSION={{version}} \
         --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
         --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
