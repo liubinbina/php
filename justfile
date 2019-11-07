@@ -1,13 +1,14 @@
-build:
-    docker build . -t nnurphy/phpf:7.2 --progress=plain \
-        --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
-        --build-arg php_url=http://172.178.1.204:2015/php-7.2.24.tar.xz \
-        --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
-
-build-apt version="5.6":
-    docker build . -t nnurphy/phpf:{{version}} -f Dockerfile-apt \
+build version="5.6":
+    docker build . -t nnurphy/phpf:{{version}} -f Dockerfile \
         --build-arg PHP_VERSION={{version}} \
         --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
+        --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
+
+
+build-gcc:
+    docker build . -t nnurphy/phpf:7.2 -f Dockerfile-gcc \
+        --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
+        --build-arg php_url=http://172.178.1.204:2015/php-7.2.24.tar.xz \
         --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
 
 
