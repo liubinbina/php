@@ -1,9 +1,9 @@
 server {
-    listen   80 default_server; ## listen for ipv4; this line is default and implied
+    set $root       '/srv';
     ## server_name
-    set $root '/srv';
+    listen          80;
+    charset         utf-8;
 
-    charset utf8;
     location ~ .*\.(gif|jpg|jpeg|bmp|png|ico|txt|js|css)$
     {
         root $root;
@@ -45,7 +45,7 @@ server {
 
     location /wstunnel {
 	    proxy_read_timeout 1800s;
-	    proxy_pass http://127.0.0.1:8080;
+	    proxy_pass http://127.0.0.1:9999;
 	    proxy_http_version 1.1;
 	    proxy_set_header Upgrade $http_upgrade;
 	    proxy_set_header Connection "upgrade";
