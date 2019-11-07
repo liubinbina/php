@@ -1,9 +1,9 @@
 #!/usr/bin/with-contenv sh
 if [ ! -z $PHP_UPLOAD_MAX_FILESIZE ]; then
-    sed -i 's!\(upload_max_filesize =\).*!\1 '"$PHP_UPLOAD_MAX_FILESIZE"'!g' /usr/local/etc/php/php.ini
+    sed -i 's!\(upload_max_filesize =\).*!\1 '"$PHP_UPLOAD_MAX_FILESIZE"'!g' /etc/php/*/fpm/php.ini
 fi
 
 
 echo >&2 "starting php-fpm"
 
-exec /usr/local/sbin/php-fpm 2>&1
+exec /usr/sbin/php-fpm 2>&1
