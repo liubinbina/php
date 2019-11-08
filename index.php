@@ -1,4 +1,8 @@
 <?php
-$s = "Hello World!";
-echo $s;
+var_dump(getenv());
+
+var_dump($_ENV);
+
+exit;
+
 phpinfo();

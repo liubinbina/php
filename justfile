@@ -16,8 +16,10 @@ test:
     docker run --rm \
         --name=test \
         -p 8090:80 \
+        -e WEB_ROOT=/app \
         -v vscode-server-php:/root/.vscode-server \
         -v $(pwd)/id_ecdsa.php.pub:/root/.ssh/authorized_keys \
+        -v $(pwd)/index.php:/app/index.php \
         nnurphy/phpf:7.2
 
 # wstunnel -L 2223:127.0.0.1:80 ws://127.0.0.1:80 --upgradePathPrefix=wstunnel-S6cHCQuPtVubM

@@ -25,18 +25,23 @@ RUN set -eux \
   ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* \
   \
   ; ln -sf /usr/sbin/php-fpm${PHP_VERSION} /usr/sbin/php-fpm \
-  ; sed -i 's!^.*\(date.timezone =\).*$!\1 Asia/Shanghai!' /etc/php/${PHP_VERSION}/fpm/php.ini \
-  ; sed -i 's!.*\(daemonize =\).*!\1 no!' /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
-  ; sed -i 's!\(listen =\).*!\1 /var/run/php/php-fpm.sock!' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
-  ; sed -i 's!^\(error_reporting =.*\)$!\1 \& ~E_WARNING!'  /etc/php/${PHP_VERSION}/fpm/php.ini \
+  ; sed -i /etc/php/${PHP_VERSION}/fpm/php.ini \
+        -e 's!^.*\(date.timezone =\).*$!\1 Asia/Shanghai!' \
+        #-e 's!^.*\(variables_order =\).*$!\1 "EGPCS!' \
+        -e 's!^\(error_reporting =.*\)$!\1 \& ~E_WARNING!' \
+  ; sed -i /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
+        -e 's!.*\(daemonize =\).*!\1 no!' \
+  ; sed -i /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
+        -e 's!\(listen =\).*!\1 /var/run/php/php-fpm.sock!' \
+        -e 's!.*\(clear_env =\).*$!\1 no!' \
   ; mkdir -p /var/run/php \
   ; { \
-		  echo 'xdebug.remote_log="/tmp/xdebug.log"' ; \
-		  echo 'xdebug.remote_enable=on' ; \
-		  echo 'xdebug.remote_autostart=on' ; \
-		  echo 'xdebug.remote_port=9001' ; \
-		  echo 'xdebug.idekey=XDEBUG_ECLIPSE' ; \
-	  } >> /etc/php/${PHP_VERSION}/mods-available/xdebug.ini
+      echo 'xdebug.remote_log="/tmp/xdebug.log"' ; \
+      echo 'xdebug.remote_enable=on' ; \
+      echo 'xdebug.remote_autostart=on' ; \
+      echo 'xdebug.remote_port=9001' ; \
+      echo 'xdebug.idekey=XDEBUG_ECLIPSE' ; \
+    } >> /etc/php/${PHP_VERSION}/mods-available/xdebug.ini
 
 COPY docker-nginx-default /etc/nginx/conf.d/default.conf
 COPY services.d/php-fpm /etc/services.d/php-fpm
