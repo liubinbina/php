@@ -28,8 +28,8 @@ RUN set -eux \
   ; ln -sf /usr/sbin/php-fpm${PHP_VERSION} /usr/sbin/php-fpm \
   ; sed -i /etc/php/${PHP_VERSION}/fpm/php.ini \
         -e 's!^.*\(date.timezone =\).*$!\1 Asia/Shanghai!' \
-        #-e 's!^.*\(variables_order =\).*$!\1 "EGPCS!' \
-        -e 's!^\(error_reporting =.*\)$!\1 \& ~E_WARNING!' \
+        -e 's!^.*\(track_errors =\).*$!\1 Off!' \
+        #-e 's!^\(error_reporting =.*\)$!\1 \& ~E_WARNING!' \
   ; sed -i /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
         -e 's!.*\(daemonize =\).*!\1 no!' \
   ; sed -i /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
