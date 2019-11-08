@@ -12,27 +12,6 @@ build-gcc:
         --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
 
 
-build-55:
-    docker build . -t nnurphy/phpf:5.5 -f Dockerfile-5.5 \
-        --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
-        --build-arg php_url=http://172.178.1.204:2015/php-5.5.38.tar.xz \
-        --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
-
-build-56:
-    docker build . -t nnurphy/phpf:5.6 -f Dockerfile-5.6 \
-        --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
-        --build-arg PHP_URL=http://172.178.1.204:2015/php-5.6.40.tar.xz \
-        --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
-
-info:
-    docker run --rm \
-        --name=test \
-        -p 8088:80 \
-        -p 9002:22 \
-        -v vscode-server-php:/root/.vscode-server \
-        -v $(pwd)/index.php:/srv/index.php \
-        phpf:7.2
-
 test:
     docker run --rm \
         --name=test \
@@ -42,13 +21,6 @@ test:
         nnurphy/phpf:7.2
 
 # wstunnel -L 2223:127.0.0.1:80 ws://127.0.0.1:80 --upgradePathPrefix=wstunnel-S6cHCQuPtVubM
-
-wsc:
-    docker run --rm \
-        --name=wsc \
-        -e SRV=ws://172.178.5.21:8090 \
-        -p 8899:8080 \
-        wstunnel 0.0.0.0:8080:127.0.0.1:80 --upgradePathPrefix=wstunnel-ldljWkuBLwUMn
 
 k8sc token:
     docker run --rm \
@@ -61,3 +33,13 @@ debug:
         --network=container:test \
         --pid=container:test \
         deb
+
+export:
+    #!/bin/zsh
+    docker save nnurphy/phpf:7.2 nnurphy/phpf:5.6 \
+        | zstd -c -18 -T0 \
+        | tee >(ssh eng-37  'zstd -d | docker load') \
+        | tee >(ssh eng     'zstd -d | docker load') \
+        | tee >(ssh eng-dev 'zstd -d | docker load') \
+        | tee >(ssh xmh     'zstd -d | docker load') \
+        > ~/pub/Platform/php/phpf.tar.zst
