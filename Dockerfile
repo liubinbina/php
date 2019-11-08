@@ -22,8 +22,9 @@ RUN set -eux \
         | tee /etc/apt/sources.list.d/php.list \
   ; apt-get update \
   ; apt-get install -y --no-install-recommends $PHP_PGKS \
-  ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* \
-  \
+  ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux \
   ; ln -sf /usr/sbin/php-fpm${PHP_VERSION} /usr/sbin/php-fpm \
   ; sed -i /etc/php/${PHP_VERSION}/fpm/php.ini \
         -e 's!^.*\(date.timezone =\).*$!\1 Asia/Shanghai!' \
