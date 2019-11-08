@@ -28,6 +28,7 @@ RUN set -eux \
   ; sed -i 's!^.*\(date.timezone =\).*$!\1 Asia/Shanghai!' /etc/php/${PHP_VERSION}/fpm/php.ini \
   ; sed -i 's!.*\(daemonize =\).*!\1 no!' /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
   ; sed -i 's!\(listen =\).*!\1 /var/run/php/php-fpm.sock!' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
+  ; sed -i 's!^\(error_reporting =.*\)$!\1 \& ~E_WARNING!'  /etc/php/${PHP_VERSION}/fpm/php.ini \
   ; mkdir -p /var/run/php \
   ; { \
 		  echo 'xdebug.remote_log="/tmp/xdebug.log"' ; \
