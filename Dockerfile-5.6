@@ -26,15 +26,15 @@ RUN set -eux \
 
 RUN set -eux \
   ; ln -sf /usr/sbin/php-fpm${PHP_VERSION} /usr/sbin/php-fpm \
-  ; sed -i /etc/php/${PHP_VERSION}/fpm/php.ini \
-        -e 's!^.*\(date.timezone =\).*$!\1 Asia/Shanghai!' \
+  ; sed -e 's!^.*\(date.timezone =\).*$!\1 Asia/Shanghai!' \
         -e 's!^.*\(track_errors =\).*$!\1 Off!' \
         #-e 's!^\(error_reporting =.*\)$!\1 \& ~E_WARNING!' \
-  ; sed -i /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
-        -e 's!.*\(daemonize =\).*!\1 no!' \
-  ; sed -i /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
-        -e 's!\(listen =\).*!\1 /var/run/php/php-fpm.sock!' \
+        -i /etc/php/${PHP_VERSION}/fpm/php.ini \
+  ; sed -e 's!.*\(daemonize =\).*!\1 no!' \
+        -i /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
+  ; sed -e 's!\(listen =\).*!\1 /var/run/php/php-fpm.sock!' \
         -e 's!.*\(clear_env =\).*$!\1 no!' \
+        -i /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
   ; mkdir -p /var/run/php \
   ; { \
       echo 'xdebug.remote_log="/tmp/xdebug.log"' ; \
