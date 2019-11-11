@@ -1,4 +1,4 @@
-FROM nnurphy/deployment
+FROM nnurphy/nwss
 
 ARG PHP_VERSION=7.2
 ENV PHP_PGKS \
