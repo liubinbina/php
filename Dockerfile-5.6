@@ -34,6 +34,7 @@ RUN set -eux \
         -i /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
   ; sed -e 's!\(listen =\).*!\1 /var/run/php/php-fpm.sock!' \
         -e 's!.*\(clear_env =\).*$!\1 no!' \
+        -e 's!.*\(pm.max_children =\).*$!\1 200!' \
         -i /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
   ; mkdir -p /var/run/php \
   ; { \
