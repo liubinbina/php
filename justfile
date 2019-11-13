@@ -18,6 +18,7 @@ test profile="1":
         -p 8090:80 \
         -e WEB_ROOT=/app \
         -e PHP_PROFILE={{profile}} \
+        -e PHP_DEBUG={{profile}} \
         -v vscode-server-php:/root/.vscode-server \
         -v $(pwd)/id_ecdsa.php.pub:/root/.ssh/authorized_keys \
         -v $(pwd)/index.php:/app/index.php \

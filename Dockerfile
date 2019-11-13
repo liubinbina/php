@@ -4,6 +4,7 @@ ARG php_version=7.2
 ENV PHP_VERSION=${php_version}
 ENV PHP_PGKS \
         php${PHP_VERSION} \
+        php${PHP_VERSION}-opcache \
         php${PHP_VERSION}-fpm \
         php${PHP_VERSION}-cli \
         php${PHP_VERSION}-common \
@@ -37,14 +38,7 @@ RUN set -eux \
         -e 's!.*\(clear_env =\).*$!\1 no!' \
         -e 's!.*\(pm.max_children =\).*$!\1 200!' \
         -i /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
-  ; mkdir -p /var/run/php \
-  ; { \
-      echo 'xdebug.remote_log="/var/log/xdebug/xdebug.log"' ; \
-      echo 'xdebug.remote_enable=on' ; \
-      echo 'xdebug.remote_autostart=on' ; \
-      echo 'xdebug.remote_port=9001' ; \
-      echo 'xdebug.idekey=XDEBUG_ECLIPSE' ; \
-    } >> /etc/php/${PHP_VERSION}/mods-available/xdebug.ini
+  ; mkdir -p /var/run/php
 
 COPY docker-nginx-default /etc/nginx/conf.d/default.conf
 COPY services.d/php-fpm /etc/services.d/php-fpm
