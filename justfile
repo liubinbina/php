@@ -1,6 +1,6 @@
 build version="5.6":
     docker build . -t nnurphy/phpf:{{version}} \
-        --build-arg PHP_VERSION={{version}} \
+        --build-arg php_version={{version}} \
         --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
         --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
 
@@ -12,14 +12,16 @@ build-gcc:
         --build-arg wstunnel_url=http://172.178.1.204:2015/tools/wstunnel_linux_x64
 
 
-test:
+test profile="1":
     docker run --rm \
         --name=test \
         -p 8090:80 \
         -e WEB_ROOT=/app \
+        -e PHP_PROFILE={{profile}} \
         -v vscode-server-php:/root/.vscode-server \
         -v $(pwd)/id_ecdsa.php.pub:/root/.ssh/authorized_keys \
         -v $(pwd)/index.php:/app/index.php \
+        -v $(pwd)/log:/var/log/xdebug \
         nnurphy/phpf:7.2
 
 # wstunnel -L 2223:127.0.0.1:80 ws://127.0.0.1:80 --upgradePathPrefix=wstunnel-S6cHCQuPtVubM
@@ -30,11 +32,12 @@ k8sc token:
         -p 2233:8080 \
         wstunnel -L 0.0.0.0:8080:127.0.0.1:22 ws://172.178.5.21:8090 --upgradePathPrefix=wstunnel-{{token}}
 
-debug:
-    docker run --rm -it \
-        --network=container:test \
-        --pid=container:test \
-        deb
+profile:
+    docker run --rm \
+        --name php-profile-test \
+        -p 8091:80 \
+        -v $(pwd)/log:/tmp/xdebug \
+        creativeprojects/webgrind
 
 export:
     #!/bin/zsh

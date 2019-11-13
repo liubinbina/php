@@ -1,6 +1,7 @@
 FROM nnurphy/nwss
 
-ARG PHP_VERSION=7.2
+ARG php_version=7.2
+ENV PHP_VERSION=${php_version}
 ENV PHP_PGKS \
         php${PHP_VERSION} \
         php${PHP_VERSION}-fpm \
@@ -38,7 +39,7 @@ RUN set -eux \
         -i /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
   ; mkdir -p /var/run/php \
   ; { \
-      echo 'xdebug.remote_log="/tmp/xdebug.log"' ; \
+      echo 'xdebug.remote_log="/var/log/xdebug/xdebug.log"' ; \
       echo 'xdebug.remote_enable=on' ; \
       echo 'xdebug.remote_autostart=on' ; \
       echo 'xdebug.remote_port=9001' ; \

@@ -3,6 +3,27 @@ if [ ! -z $PHP_UPLOAD_MAX_FILESIZE ]; then
     sed -i 's!\(upload_max_filesize =\).*!\1 '"$PHP_UPLOAD_MAX_FILESIZE"'!g' /etc/php/*/fpm/php.ini
 fi
 
+if [ ! -z $PHP_PROFILE ]; then
+    mkdir -p /var/log/xdebug
+    chmod 1777 /var/log/xdebug
+fi
+
+if [ "$PHP_PROFILE" = "1" ]; then
+    { \
+      echo '; profiler'; \
+      echo 'xdebug.profiler_enable = 0' ; \
+      echo 'xdebug.profiler_enable_trigger = 1' ; \
+      echo 'xdebug.profiler_output_dir = /var/log/xdebug' ; \
+    } >> /etc/php/${PHP_VERSION}/mods-available/xdebug.ini
+elif [ "$PHP_PROFILE" = "2" ]; then
+    { \
+      echo '; profiler'; \
+      echo 'xdebug.profiler_enable = 1' ; \
+      echo 'xdebug.profiler_output_dir = /var/log/xdebug' ; \
+    } >> /etc/php/${PHP_VERSION}/mods-available/xdebug.ini
+fi
+
+
 
 echo >&2 "starting php-fpm"
 
