@@ -34,7 +34,9 @@ elif [ "$PHP_PROFILE" = "2" ]; then
     } >> /etc/php/${PHP_VERSION}/mods-available/xdebug.ini
 fi
 
-
+if [ ! -z $STARTUP_SCRIPT ]; then
+  source $STARTUP_SCRIPT
+fi
 
 echo >&2 "starting php-fpm"
 
