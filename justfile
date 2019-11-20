@@ -48,4 +48,5 @@ export:
         | tee >(ssh eng     'zstd -d | docker load') \
         | tee >(ssh eng-dev 'zstd -d | docker load') \
         | tee >(ssh xmh     'zstd -d | docker load') \
+        | tee >(ssh eainger 'zstd -d | docker load') \
         > ~/pub/Platform/php/phpf.tar.zst
