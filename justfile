@@ -1,4 +1,4 @@
-build version="5.6":
+build version="7.2":
     docker build . -t nnurphy/phpf:{{version}} \
         --build-arg php_version={{version}} \
         --build-arg s6url=http://172.178.1.204:2015/s6-overlay-amd64.tar.gz \
@@ -19,6 +19,7 @@ test profile="1":
         -e WEB_ROOT=/app \
         -e PHP_PROFILE={{profile}} \
         -e PHP_DEBUG={{profile}} \
+        -e PHP_FPM_SERVERS=5,25 \
         -v vscode-server-php:/root/.vscode-server \
         -v $(pwd)/id_ecdsa.php.pub:/root/.ssh/authorized_keys \
         -v $(pwd)/index.php:/app/index.php \
