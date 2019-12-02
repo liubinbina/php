@@ -33,6 +33,7 @@ RUN set -eux \
         #-e 's!^\(error_reporting =.*\)$!\1 \& ~E_WARNING!' \
         -i /etc/php/${PHP_VERSION}/fpm/php.ini \
   ; sed -e 's!.*\(daemonize =\).*!\1 no!' \
+        -e 's!.*\(error_log =\).*!\1 /var/log/php-fpm/error.log' \
         -i /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
   ; sed -e 's!\(listen =\).*!\1 /var/run/php/php-fpm.sock!' \
         -e 's!.*\(clear_env =\).*$!\1 no!' \
