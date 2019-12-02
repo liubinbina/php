@@ -23,7 +23,7 @@ RUN set -eux \
   ; echo "deb https://packages.sury.org/php/ buster main"  \
         | tee /etc/apt/sources.list.d/php.list \
   ; apt-get update \
-  ; apt-get install -y --no-install-recommends $PHP_PGKS bc \
+  ; apt-get install -y --no-install-recommends $PHP_PGKS \
   ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 RUN set -eux \
@@ -33,9 +33,11 @@ RUN set -eux \
         #-e 's!^\(error_reporting =.*\)$!\1 \& ~E_WARNING!' \
         -i /etc/php/${PHP_VERSION}/fpm/php.ini \
   ; sed -e 's!.*\(daemonize =\).*!\1 no!' \
-        -e 's!.*\(error_log =\).*!\1 /var/log/php-fpm/error.log' \
+        -e 's!.*\(error_log =\).*!\1 /var/log/php-fpm/fpm.log!' \
         -i /etc/php/${PHP_VERSION}/fpm/php-fpm.conf \
+  ; mkdir -p /var/log/php-fpm \
   ; sed -e 's!\(listen =\).*!\1 /var/run/php/php-fpm.sock!' \
+        -e 's!.*\(slowlog =\).*$!\1 /var/log/php-fpm/fpm.log.slow!' \
         -e 's!.*\(clear_env =\).*$!\1 no!' \
         -e 's!.*\(pm.start_servers =\).*$!\1 6!' \
         -e 's!.*\(pm.min_spare_servers =\).*$!\1 5!' \
