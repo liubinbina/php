@@ -8,6 +8,7 @@ server {
 
     location = /favicon.ico
     {
+        root $root;
         log_not_found off;
         access_log off;
     }
