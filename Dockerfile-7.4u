@@ -19,9 +19,6 @@ ENV PHP_PGKS \
         php-xdebug
 
 RUN set -eux \
-  ; curl -sL https://packages.sury.org/php/apt.gpg | apt-key add - \
-  ; echo "deb https://packages.sury.org/php/ buster main"  \
-        | tee /etc/apt/sources.list.d/php.list \
   ; apt-get update \
   ; apt-get install -y --no-install-recommends $PHP_PGKS \
   ; apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
