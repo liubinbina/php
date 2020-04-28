@@ -17,14 +17,15 @@ test profile="1":
         --name=test \
         -p 8090:80 \
         -e WEB_ROOT=/app \
-        -e PHP_PROFILE={{profile}} \
         -e PHP_DEBUG={{profile}} \
+        -e WS_FIXED=1 \
         -e PHP_FPM_SERVERS=5,25 \
         -v vscode-server-php:/root/.vscode-server \
-        -v $(pwd)/id_ecdsa.php.pub:/root/.ssh/authorized_keys \
+        -v $(pwd)/id_ed25519.pub:/etc/authorized_keys/root \
         -v $(pwd)/index.php:/app/index.php \
         -v $(pwd)/log:/var/log/xdebug \
-        nnurphy/phpf:7.2
+        -v $PWD/index.php:/srv/index.php \
+        nnurphy/phpf:7.4u
 
 # wstunnel -L 2223:127.0.0.1:80 ws://127.0.0.1:80 --upgradePathPrefix=wstunnel-S6cHCQuPtVubM
 
