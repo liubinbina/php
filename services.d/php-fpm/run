@@ -32,7 +32,8 @@ if [ ! -z $PHP_DEBUG ]; then
       echo 'xdebug.remote_log="/var/log/xdebug/xdebug.log"' ; \
       echo 'xdebug.remote_enable=on' ; \
       echo 'xdebug.remote_autostart=off' ; \
-      echo 'xdebug.remote_port=9001' ; \
+      echo 'xdebug.remote_host=127.0.0.1' ; \
+      echo 'xdebug.remote_port=9000' ; \
       echo "xdebug.idekey=${xdebug_idekey}" ; \
     } >> /etc/php/${PHP_VERSION}/mods-available/xdebug.ini
 fi
