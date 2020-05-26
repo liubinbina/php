@@ -1,4 +1,4 @@
-FROM nnurphy/nwss
+FROM nnurphy/or:deb
 
 ARG php_version=7.4
 ENV PHP_VERSION=${php_version}
@@ -44,7 +44,7 @@ RUN set -eux \
         -i /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
   ; mkdir -p /var/run/php
 
-COPY docker-nginx-default /etc/nginx/conf.d/default.conf
+COPY docker-nginx-default /etc/openresty/sites/default.conf
 COPY services.d/php-fpm /etc/services.d/php-fpm
 
 ENV PHP_DEBUG=

@@ -1,27 +1,13 @@
 server {
     set $root       '/srv';
-    ## server_name
+    server_name     _;
     listen          80;
     charset         utf-8;
 
-    location = /500.html {}
+    root            $root;
+    #access_log     /var/log/nginx/host.access.log  main;
 
-    location = /favicon.ico
-    {
-        root $root;
-        log_not_found off;
-        access_log off;
-    }
-
-    location = /robots.txt
-    {
-        allow all;
-        log_not_found off;
-        access_log off;
-    }
-
-    location /
-    {
+    location / {
         root $root;
         index index.php index.html index.htm;
         if (!-e $request_filename) {
@@ -30,8 +16,7 @@ server {
         }
     }
 
-    location ~ \.php$
-    {
+    location ~ \.php$ {
         root $root;
         include fastcgi_params;
         fastcgi_index  index.php;
@@ -39,9 +24,40 @@ server {
 	    fastcgi_pass unix:/var/run/php/php-fpm.sock;
     }
 
-    include /etc/nginx/location/*.conf;
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
 
-    location /websocat {
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+
+    location /hello-lua {
+        content_by_lua_block {
+            ngx.say "content_by_lua_block {\n    ngx.say \"hello world!\"\n}"
+        }
+    }
+
+    #error_page     404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page      500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+    # deny access to .htaccess files, if Apache's document root
+    # concurs with nginx's one
+    #
+    #location ~ /\.ht {
+    #    deny  all;
+    #}
+
+    location = /websocat {
 	    proxy_read_timeout 1800s;
 	    proxy_pass http://127.0.0.1:9999;
 	    proxy_http_version 1.1;
