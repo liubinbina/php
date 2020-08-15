@@ -1,4 +1,4 @@
-FROM nnurphy/or
+FROM liubin8096/openresty
 
 ARG php_version=7.4
 ENV PHP_VERSION=${php_version}
